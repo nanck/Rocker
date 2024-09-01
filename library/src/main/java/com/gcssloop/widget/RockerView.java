@@ -492,5 +492,4 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
          */
         void callback(int eventType, int currentAngle, float currentDistance);
     }
-
 }

@@ -2,10 +2,14 @@
 
 buildscript {
     repositories {
-        jcenter()
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        // 可以保留其他仓库如 jcenter()、google() 等，以便在阿里云镜像找不到资源时备用
+        google()
+        mavenCentral()
     }
+
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.1.0'
+        classpath 'com.android.tools.build:gradle:7.4.2'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -14,8 +18,11 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        // 可以保留其他仓库如 jcenter()、google() 等，以便在阿里云镜像找不到资源时备用
         maven { url "https://jitpack.io" }
+        google()
+        mavenCentral()
     }
 }
 
