@@ -17,6 +17,6 @@
         rocker:area_radius="80dp"
         rocker:callback_cycle="300"
         rocker:rocker_background="@drawable/rocker_bg"
-        rocker:rocker_radius="30dp"/>
+        rocker:rocker_radius="40dp"/>
 
 </RelativeLayout>

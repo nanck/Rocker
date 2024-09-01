@@ -13,8 +13,11 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -23,6 +26,9 @@ import android.view.View;
 import com.gcssloop.rocker.R;
 import com.gcssloop.view.utils.DensityUtils;
 import com.gcssloop.view.utils.MathUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A custom view for game or others.
@@ -83,8 +89,17 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
     private int mRefreshCycle = DEFAULT_REFRESH_CYCLE;
     private int mCallbackCycle = DEFAULT_CALLBACK_CYCLE;
 
-
     /*Life Cycle***********************************************************************************/
+
+    private State[] mStates = {
+            new State("Slow", Color.RED),
+            new State("Mid", Color.GREEN),
+            new State("Fast", Color.BLUE),
+    };
+    private int mStateIndex = 0;
+
+    private TextPaint mStateTextPaint;
+    private Paint mStateColorPaint;
 
     public RockerView(Context context) {
         this(context, null);
@@ -151,9 +166,29 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
         }
     }
 
+    public State nextState() {
+        mStateIndex = (mStateIndex + 1) % 3;
+        Log.d("XXXX", "nextState() mStateIndex = " + mStateIndex);
+        return getCurrentState();
+    }
+
+    public State getCurrentState() {
+        return mStates[mStateIndex];
+    }
+
     private void setPaint() {
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
+
+        final State current = getCurrentState();
+        mStateTextPaint = new TextPaint();
+        mStateTextPaint.setColor(Color.WHITE);
+        mStateTextPaint.setTextAlign(Paint.Align.CENTER);
+        mStateTextPaint.setTextSize(32f);
+
+        mStateColorPaint = new Paint();
+        mStateColorPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+        mStateColorPaint.setColor(current.color);
     }
 
     private void configSurfaceView() {
@@ -172,7 +207,7 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int measureWidth = 0, measureHeight = 0;
-        int defaultWidth = (mAreaRadius + mRockerRadius)*2;
+        int defaultWidth = (mAreaRadius + mRockerRadius) * 2;
         int defalutHeight = defaultWidth;
 
         int widthsize = MeasureSpec.getSize(widthMeasureSpec);      //取出宽度的确切数值
@@ -222,7 +257,7 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
             mCallbackThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    while (mCallbackOk){
+                    while (mCallbackOk) {
 
                         // listener callback
                         listenerCallback();
@@ -243,18 +278,19 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-            mDrawOk = false;
-            mCallbackOk = false;
+        mDrawOk = false;
+        mCallbackOk = false;
     }
 
     @Override
     protected void onVisibilityChanged(View changedView, int visibility) {
         super.onVisibilityChanged(changedView, visibility);
-        if(visibility==VISIBLE) {
+        if (visibility == VISIBLE) {
             mDrawOk = true;
             mCallbackOk = true;
         } else {
@@ -291,14 +327,23 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
                     float radian = MathUtils.getRadian(mAreaPosition, new Point((int) event.getX(), (int) event.getY()));
                     int angle = RockerView.this.getAngleConvert(radian);
                     float distance = MathUtils.getDistance(mAreaPosition.x, mAreaPosition.y, event.getX(), event.getY());
-                    mListener.callback(EVENT_ACTION, angle, distance);
+                    mListener.callback(EVENT_ACTION, angle, distance, getCurrentState());
                 }
             }
             //如果手指离开屏幕，则摇杆返回初始位置
             if (event.getAction() == MotionEvent.ACTION_UP) {
+                float radian = MathUtils.getRadian(mAreaPosition, new Point((int) event.getX(), (int) event.getY()));
+                int angle = RockerView.this.getAngleConvert(radian);
+                final int w = getWidth();
+                final int h = getHeight();
+                final boolean isAtCenter = mRockerPosition.x == w / 2 && mRockerPosition.y == h / 2;
+                Log.d("XXXX", "onTouch() action = ACTION_UP radian = " + radian + " -angle " + angle + " - isAtCenter " + isAtCenter);
+                if (isAtCenter) {
+                    nextState();
+                }
                 mRockerPosition = new Point(mAreaPosition);
                 if (mListener != null) {
-                    mListener.callback(EVENT_ACTION, -1, 0);
+                    mListener.callback(EVENT_ACTION, -1, 0, getCurrentState());
                 }
             }
         } catch (Exception e) {
@@ -325,6 +370,7 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
 
                 drawArea(canvas);
                 drawRocker(canvas);
+                drawState(canvas);
 
                 Thread.sleep(mRefreshCycle);    // 休眠
 
@@ -371,15 +417,27 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
         }
     }
 
+    private void drawState(Canvas canvas) {
+        final State current = getCurrentState();
+        mStateColorPaint.setColor(current.color);
+        canvas.drawCircle(mRockerPosition.x, mRockerPosition.y, mRockerRadius, mStateColorPaint);
+
+        Rect bounds = new Rect();
+        mStateTextPaint.getTextBounds(current.text, 0, current.text.length(), bounds);
+        final int offset = bounds.height() / 2;
+        Log.d("XXXX", "drawState() offsetY = " + offset);
+        canvas.drawText(current.text, mRockerPosition.x, mRockerPosition.y + offset, mStateTextPaint);
+    }
+
     private void listenerCallback() {
         if (mListener != null) {
             if (mRockerPosition.x == mAreaPosition.x && mRockerPosition.y == mAreaPosition.y) {
-                mListener.callback(EVENT_CLOCK, -1, 0);
+                mListener.callback(EVENT_CLOCK, -1, 0, getCurrentState());
             } else {
                 float radian = MathUtils.getRadian(mAreaPosition, new Point(mRockerPosition.x, mRockerPosition.y));
                 int angle = RockerView.this.getAngleConvert(radian);
                 float distance = MathUtils.getDistance(mAreaPosition.x, mAreaPosition.y, mRockerPosition.x, mRockerPosition.y);
-                mListener.callback(EVENT_CLOCK, angle, distance);
+                mListener.callback(EVENT_CLOCK, angle, distance, getCurrentState());
             }
         }
     }
@@ -401,6 +459,7 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
             canvas.drawColor(Color.WHITE);
             drawArea(canvas);
             drawRocker(canvas);
+            drawState(canvas);
         }
     }
 
@@ -486,10 +545,21 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
         /**
          * you can get some event from this method
          *
-         * @param eventType The event type, EVENT_ACTION or EVENT_CLOCK
-         * @param currentAngle The current angle
+         * @param eventType       The event type, EVENT_ACTION or EVENT_CLOCK
+         * @param currentAngle    The current angle
          * @param currentDistance The current distance (px)
          */
-        void callback(int eventType, int currentAngle, float currentDistance);
+        void callback(int eventType, int currentAngle, float currentDistance, State currentState);
+    }
+
+    public static class State {
+        public String text;
+        @ColorInt
+        public int color;
+
+        public State(String text, @ColorInt int color) {
+            this.text = text;
+            this.color = color;
+        }
     }
 }
