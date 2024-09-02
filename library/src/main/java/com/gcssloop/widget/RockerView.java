@@ -452,7 +452,7 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
         mStateColorPaint.setColor(Color.WHITE);
         mStateColorPaint.setStyle(Paint.Style.STROKE);
         mStateColorPaint.setStrokeWidth(strokeWidth);
-        canvas.drawCircle(mRockerPosition.x, mRockerPosition.y, mRockerRadius + strokeWidth, mStateColorPaint);
+        canvas.drawCircle(mRockerPosition.x, mRockerPosition.y, mRockerRadius, mStateColorPaint);
 
         Rect bounds = new Rect();
         mStateTextPaint.getTextBounds(current.text, 0, current.text.length(), bounds);
