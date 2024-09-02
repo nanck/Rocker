@@ -27,8 +27,8 @@ import com.gcssloop.rocker.R;
 import com.gcssloop.view.utils.DensityUtils;
 import com.gcssloop.view.utils.MathUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Locale;
+
 
 /**
  * A custom view for game or others.
@@ -100,6 +100,9 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
 
     private TextPaint mStateTextPaint;
     private Paint mStateColorPaint;
+
+    // 是否正在拖动
+    private boolean isDragging = false;
 
     public RockerView(Context context) {
         this(context, null);
@@ -174,6 +177,20 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
 
     public State getCurrentState() {
         return mStates[mStateIndex];
+    }
+
+    public void setCurrentState(String text) {
+        if (null == text) {
+            return;
+        }
+        for (int i = 0; i < mStates.length; i++) {
+            final State state = mStates[i];
+            if (state.text.toLowerCase(Locale.getDefault()).equals(text.toLowerCase())) {
+                mStateIndex = i;
+                break;
+            }
+        }
+        throw new IllegalArgumentException("参数(" + text + ")找不到匹配的 " + State.class.getSimpleName() + " 实例");
     }
 
     private void setPaint() {
@@ -303,6 +320,11 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        final int w = getWidth();
+        final int h = getHeight();
+        final float cX = w / 2f;
+        final float cY = h / 2f;
+
         try {
             int len = MathUtils.getDistance(mAreaPosition.x, mAreaPosition.y, event.getX(), event.getY());
 
@@ -317,7 +339,9 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
                 if (len <= mAreaRadius) {
                     //如果手指在摇杆活动范围内，则摇杆处于手指触摸位置
                     mRockerPosition.set((int) event.getX(), (int) event.getY());
-
+                    if (MathUtils.getDistance(mRockerPosition.x, mRockerPosition.y, cX, cY) > 5) {
+                        isDragging = true;
+                    }
                 } else {
                     //设置摇杆位置，使其处于手指触摸方向的 摇杆活动范围边缘
                     mRockerPosition = MathUtils.getPointByCutLength(mAreaPosition,
@@ -332,10 +356,9 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
             }
             //如果手指离开屏幕，则摇杆返回初始位置
             if (event.getAction() == MotionEvent.ACTION_UP) {
+                isDragging = false;
                 float radian = MathUtils.getRadian(mAreaPosition, new Point((int) event.getX(), (int) event.getY()));
                 int angle = RockerView.this.getAngleConvert(radian);
-                final int w = getWidth();
-                final int h = getHeight();
                 final boolean isAtCenter = mRockerPosition.x == w / 2 && mRockerPosition.y == h / 2;
                 Log.d("XXXX", "onTouch() action = ACTION_UP radian = " + radian + " -angle " + angle + " - isAtCenter " + isAtCenter);
                 if (isAtCenter) {
@@ -385,19 +408,20 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
     }
 
     private void drawArea(Canvas canvas) {
-
-        if (null != mAreaBitmap) {
-            mPaint.setColor(Color.BLACK);
-            Rect src = new Rect(0, 0, mAreaBitmap.getWidth(), mAreaBitmap.getHeight());
-            Rect dst = new Rect(
-                    mAreaPosition.x - mAreaRadius,
-                    mAreaPosition.y - mAreaRadius,
-                    mAreaPosition.x + mAreaRadius,
-                    mAreaPosition.y + mAreaRadius);
-            canvas.drawBitmap(mAreaBitmap, src, dst, mPaint);
-        } else {
-            mPaint.setColor(mAreaColor);
-            canvas.drawCircle(mAreaPosition.x, mAreaPosition.y, mAreaRadius, mPaint);
+        if (isDragging) {
+            if (null != mAreaBitmap) {
+                mPaint.setColor(Color.BLACK);
+                Rect src = new Rect(0, 0, mAreaBitmap.getWidth(), mAreaBitmap.getHeight());
+                Rect dst = new Rect(
+                        mAreaPosition.x - mAreaRadius,
+                        mAreaPosition.y - mAreaRadius,
+                        mAreaPosition.x + mAreaRadius,
+                        mAreaPosition.y + mAreaRadius);
+                canvas.drawBitmap(mAreaBitmap, src, dst, mPaint);
+            } else {
+                mPaint.setColor(mAreaColor);
+                canvas.drawCircle(mAreaPosition.x, mAreaPosition.y, mAreaRadius, mPaint);
+            }
         }
     }
 
@@ -419,8 +443,16 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
 
     private void drawState(Canvas canvas) {
         final State current = getCurrentState();
+        mStateColorPaint.setStyle(Paint.Style.FILL);
         mStateColorPaint.setColor(current.color);
+        mStateColorPaint.setStrokeWidth(0f);
         canvas.drawCircle(mRockerPosition.x, mRockerPosition.y, mRockerRadius, mStateColorPaint);
+
+        final float strokeWidth = 2f;
+        mStateColorPaint.setColor(Color.WHITE);
+        mStateColorPaint.setStyle(Paint.Style.STROKE);
+        mStateColorPaint.setStrokeWidth(strokeWidth);
+        canvas.drawCircle(mRockerPosition.x, mRockerPosition.y, mRockerRadius + strokeWidth, mStateColorPaint);
 
         Rect bounds = new Rect();
         mStateTextPaint.getTextBounds(current.text, 0, current.text.length(), bounds);
@@ -451,6 +483,7 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
             return 180 + (180 - tmp);
         }
     }
+
 
     // for preview
     @Override
