@@ -197,11 +197,12 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
 
+        final float textSize = mRockerRadius * 0.6f;
         final State current = getCurrentState();
         mStateTextPaint = new TextPaint();
         mStateTextPaint.setColor(Color.WHITE);
         mStateTextPaint.setTextAlign(Paint.Align.CENTER);
-        mStateTextPaint.setTextSize(32f);
+        mStateTextPaint.setTextSize(textSize);
 
         mStateColorPaint = new Paint();
         mStateColorPaint.setFlags(Paint.ANTI_ALIAS_FLAG);

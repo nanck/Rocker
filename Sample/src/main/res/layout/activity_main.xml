@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="#666666"
     tools:context="com.gcssloop.rockertest.MainActivity">
 
     <com.gcssloop.widget.RockerView
@@ -12,22 +12,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        rocker:area_background="@drawable/area_bg"
-        rocker:area_radius="80dp"
+        rocker:area_background="#99333333"
+        rocker:area_radius="100dp"
         rocker:callback_cycle="300"
-        rocker:rocker_background="@drawable/rocker_bg"
-        rocker:rocker_radius="40dp" />
+        rocker:rocker_radius="30dp" />
 
     <TextView
         android:id="@+id/tvDebug"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:textSize="24sp"
         android:layout_alignParentEnd="true"
         android:background="#99FFFFFF"
         android:minLines="10"
         android:textColor="#333333"
+        android:textSize="24sp"
         tools:text="debug" />
 
 </RelativeLayout>
