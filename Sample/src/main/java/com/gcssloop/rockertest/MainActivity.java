@@ -1,11 +1,9 @@
 package com.gcssloop.rockertest;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.gcssloop.widget.RockerView;
 
@@ -45,7 +43,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void eachDebug(int eventType, int currentAngle, float currentDistance, RockerView.State currentState) {
-        String info = String.format(Locale.getDefault(), "debug\n事件类型: %d\n角度: $%d\n距离: %f\n状态:%s", eventType, currentAngle, currentDistance, currentState.text);
+        String info = String.format(Locale.getDefault(),
+                "debug\n事件类型: %d\n角度: $%d\n距离: %f\n状态:%s\ndata1: %.2f\ndata2: %.2f",
+                eventType, currentAngle, currentDistance, currentState.text, currentState.data1, currentState.data2);
         tvDebug.post(() -> {
             tvDebug.setText(info);
         });

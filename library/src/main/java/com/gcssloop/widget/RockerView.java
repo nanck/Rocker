@@ -89,14 +89,10 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
     private int mRefreshCycle = DEFAULT_REFRESH_CYCLE;
     private int mCallbackCycle = DEFAULT_CALLBACK_CYCLE;
 
+
     /*Life Cycle***********************************************************************************/
 
-    // fast -》 #42883b  mid-》 #6042883b  slow -》#3042883b
-    private State[] mStates = {
-            new State("Slow", Color.parseColor("#3042883b")),
-            new State("Mid", Color.parseColor("#6042883b")),
-            new State("Fast", Color.parseColor("#42883b")),
-    };
+    private State[] mStates = {new State("Slow", Color.parseColor("#3042883b")), new State("Mid", Color.parseColor("#6042883b")), new State("Fast", Color.parseColor("#42883b")),};
     private int mStateIndex = 0;
 
     private TextPaint mStateTextPaint;
@@ -261,10 +257,8 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
         // this need subtract the view padding
         int tempRadius = Math.min(w - getPaddingLeft() - getPaddingRight(), h - getPaddingTop() - getPaddingBottom());
         tempRadius /= 2;
-        if (mAreaRadius == -1)
-            mAreaRadius = (int) (tempRadius * 0.75);
-        if (mRockerRadius == -1)
-            mRockerRadius = (int) (tempRadius * 0.25);
+        if (mAreaRadius == -1) mAreaRadius = (int) (tempRadius * 0.75);
+        if (mRockerRadius == -1) mRockerRadius = (int) (tempRadius * 0.25);
     }
 
     @Override
@@ -346,14 +340,17 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
                     }
                 } else {
                     //设置摇杆位置，使其处于手指触摸方向的 摇杆活动范围边缘
-                    mRockerPosition = MathUtils.getPointByCutLength(mAreaPosition,
-                            new Point((int) event.getX(), (int) event.getY()), mAreaRadius);
+                    mRockerPosition = MathUtils.getPointByCutLength(mAreaPosition, new Point((int) event.getX(), (int) event.getY()), mAreaRadius);
                 }
                 if (mListener != null) {
                     float radian = MathUtils.getRadian(mAreaPosition, new Point((int) event.getX(), (int) event.getY()));
                     int angle = RockerView.this.getAngleConvert(radian);
                     float distance = MathUtils.getDistance(mAreaPosition.x, mAreaPosition.y, event.getX(), event.getY());
-                    mListener.callback(EVENT_ACTION, angle, distance, getCurrentState());
+
+                    final State currentState = getCurrentState();
+                    currentState.data1 = calcData(currentState, mRockerPosition.x);
+                    currentState.data2 = calcData(currentState, mRockerPosition.y);
+                    mListener.callback(EVENT_ACTION, angle, distance, currentState);
                 }
             }
             //如果手指离开屏幕，则摇杆返回初始位置
@@ -368,7 +365,10 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
                 }
                 mRockerPosition = new Point(mAreaPosition);
                 if (mListener != null) {
-                    mListener.callback(EVENT_ACTION, -1, 0, getCurrentState());
+                    final State currentState = getCurrentState();
+                    currentState.data1 = 0f;
+                    currentState.data2 = 0f;
+                    mListener.callback(EVENT_ACTION, -1, 0, currentState);
                 }
             }
         } catch (Exception e) {
@@ -377,6 +377,29 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
         return true;
     }
 
+
+    /**
+     * 计算摇杆速度
+     * <p>
+     * 计算系数:
+     * 高速 = 26
+     * 中速 = 9
+     * 低速 = 4
+     *
+     * @param state 当前档位
+     * @param point 当前摇杆位置(x 或 y)
+     * @return 摇杆速度
+     */
+    private float calcData(State state, float point) {
+        if (state.text.toLowerCase(Locale.getDefault()).equals("slow")) {
+            return (point / mRockerRadius) * 4f;
+        } else if (state.text.toLowerCase(Locale.getDefault()).equals("mid")) {
+            return (point / mRockerRadius) * 9f;
+        } else if (state.text.toLowerCase(Locale.getDefault()).equals("fast")) {
+            return (point / mRockerRadius) * 26f;
+        }
+        return 0f;
+    }
 
     /*Thread - draw view***************************************************************************/
 
@@ -414,11 +437,7 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
             if (null != mAreaBitmap) {
                 mPaint.setColor(Color.BLACK);
                 Rect src = new Rect(0, 0, mAreaBitmap.getWidth(), mAreaBitmap.getHeight());
-                Rect dst = new Rect(
-                        mAreaPosition.x - mAreaRadius,
-                        mAreaPosition.y - mAreaRadius,
-                        mAreaPosition.x + mAreaRadius,
-                        mAreaPosition.y + mAreaRadius);
+                Rect dst = new Rect(mAreaPosition.x - mAreaRadius, mAreaPosition.y - mAreaRadius, mAreaPosition.x + mAreaRadius, mAreaPosition.y + mAreaRadius);
                 canvas.drawBitmap(mAreaBitmap, src, dst, mPaint);
             } else {
                 mPaint.setColor(mAreaColor);
@@ -591,6 +610,9 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
         public String text;
         @ColorInt
         public int color;
+
+        public float data1;
+        public float data2;
 
         public State(String text, @ColorInt int color) {
             this.text = text;
