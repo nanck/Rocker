@@ -91,10 +91,11 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
 
     /*Life Cycle***********************************************************************************/
 
+    // fast -》 #42883b  mid-》 #6042883b  slow -》#3042883b
     private State[] mStates = {
-            new State("Slow", Color.RED),
-            new State("Mid", Color.GREEN),
-            new State("Fast", Color.BLUE),
+            new State("Slow", Color.parseColor("#3042883b")),
+            new State("Mid", Color.parseColor("#6042883b")),
+            new State("Fast", Color.parseColor("#42883b")),
     };
     private int mStateIndex = 0;
 
@@ -427,19 +428,19 @@ public class RockerView extends SurfaceView implements Runnable, SurfaceHolder.C
     }
 
     private void drawRocker(Canvas canvas) {
-        if (null != mRockerBitmap) {
-            mPaint.setColor(Color.BLACK);
-            Rect src = new Rect(0, 0, mRockerBitmap.getWidth(), mRockerBitmap.getHeight());
-            Rect dst = new Rect(
-                    mRockerPosition.x - mRockerRadius,
-                    mRockerPosition.y - mRockerRadius,
-                    mRockerPosition.x + mRockerRadius,
-                    mRockerPosition.y + mRockerRadius);
-            canvas.drawBitmap(mRockerBitmap, src, dst, mPaint);
-        } else {
-            mPaint.setColor(mRockerColor);
-            canvas.drawCircle(mRockerPosition.x, mRockerPosition.y, mRockerRadius, mPaint);
-        }
+//        if (null != mRockerBitmap) {
+//            mPaint.setColor(Color.BLACK);
+//            Rect src = new Rect(0, 0, mRockerBitmap.getWidth(), mRockerBitmap.getHeight());
+//            Rect dst = new Rect(
+//                    mRockerPosition.x - mRockerRadius,
+//                    mRockerPosition.y - mRockerRadius,
+//                    mRockerPosition.x + mRockerRadius,
+//                    mRockerPosition.y + mRockerRadius);
+//            canvas.drawBitmap(mRockerBitmap, src, dst, mPaint);
+//        } else {
+//            mPaint.setColor(mRockerColor);
+//            canvas.drawCircle(mRockerPosition.x, mRockerPosition.y, mRockerRadius, mPaint);
+//        }
     }
 
     private void drawState(Canvas canvas) {
