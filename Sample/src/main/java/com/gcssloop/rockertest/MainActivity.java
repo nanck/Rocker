@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private void eachDebug(int eventType, int currentAngle, float currentDistance, RockerView.State currentState) {
         String direction = angleToDirection(currentAngle);
         String info = String.format(Locale.getDefault(),
-                "debug\n事件类型: %d\n角度: $%d\n方向: %s\n距离: %f\n状态:%s\ndata1: %.2f\ndata2: %.2f",
+                "debug\n事件类型: %d\n角度: $%d\n方向: %s\n距离: %.2f\n状态:%s\ndata1: %.2f\ndata2: %.2f",
                 eventType, currentAngle, direction, currentDistance, currentState.text, currentState.data1, currentState.data2);
         tvDebug.post(() -> {
             tvDebug.setText(info);
