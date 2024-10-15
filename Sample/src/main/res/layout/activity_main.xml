@@ -7,7 +7,7 @@
     android:background="#666666"
     tools:context="com.gcssloop.rockertest.MainActivity">
 
-    <com.gcssloop.widget.RockerView
+    <com.gcssloop.widget.RockerView2
         android:id="@+id/rocker"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

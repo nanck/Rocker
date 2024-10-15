@@ -6,6 +6,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.gcssloop.widget.RockerView;
+import com.gcssloop.widget.RockerView2;
 
 import java.util.Locale;
 
@@ -19,9 +20,9 @@ public class MainActivity extends AppCompatActivity {
         tvDebug = (TextView) findViewById(R.id.tvDebug);
 
         try {
-            RockerView rocker = (RockerView) findViewById(R.id.rocker);
+            RockerView2 rocker = (RockerView2) findViewById(R.id.rocker);
             if (null != rocker) {
-                rocker.setListener((eventType, currentAngle, currentDistance, currentState) -> {
+                rocker.setListener((eventType, currentAngle, currentState) -> {
                     float d1 = currentState.data1;
                     float d2 = currentState.data2;
 
@@ -30,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
                         case RockerView.EVENT_CLOCK:
                             // 定时回调
                             // 触摸事件回调
-                            Log.e("EVENT_ACTION-------->", "angle=" + currentAngle + " - distance" + currentDistance + " - state " + currentState.text);
+                            Log.e("EVENT_ACTION-------->", "angle=" + currentAngle + " - state" + currentState);
+                            float currentDistance = 0f;
                             eachDebug(eventType, currentAngle, currentDistance, currentState);
                             break;
                     }
@@ -41,10 +43,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void eachDebug(int eventType, int currentAngle, float currentDistance, RockerView.State currentState) {
+    private void eachDebug(int eventType, int currentAngle, float currentDistance, RockerView2.State currentState) {
         String direction = angleToDirection(currentAngle);
         String info = String.format(Locale.getDefault(),
-                "debug\n事件类型: %d\n角度: $%d\n方向: %s\n距离: %.2f\n状态:%s\ndata1: %.2f\ndata2: %.2f",
+                "debug\n事件类型: %d\n角度: $%d\n方向: %s\n距离: %.2f\n状态:%s\ndata1: %d\ndata2: %d",
                 eventType, currentAngle, direction, currentDistance, currentState.text, currentState.data1, currentState.data2);
         tvDebug.post(() -> {
             tvDebug.setText(info);
